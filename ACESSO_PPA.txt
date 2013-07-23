@@ -1,0 +1,66 @@
+ACESSO_PPA proc    ; Acessa PPA e escreve/ou/LE VALORES - passar PORTA A SER ACESSADA NA PARTE ALTA DE AX(AH) e valor em AL. 
+  ; 0A = porta A
+  ; 0B = porta B
+  ; 0C = porta C - Escrita 
+  ; 1C = porta C - Leitura
+  ; 0D = porta D   
+  sti
+  push BX
+  push DX
+  push CX
+
+  cmp  AH, 0Ah
+  jz   porta_a
+  cmp  AH, 0Bh
+  jz   porta_b
+  cmp  AH, 0Ch    ; Porta C parte alta
+  jz   porta_Cl
+  cmp  AH, 1Ch    ; Porta C parte baixa
+  jz   porta_Ch
+  cmp  AH, 0Dh
+  jz   porta_d
+  jmp  finalizar_interrupcao
+
+PORTA_A:
+  mov  DX, lptA
+  xor CX, CX
+  out  DX, AL
+  jmp  ESC_TELA
+
+PORTA_B:
+  mov  DX, lptB
+  xor AX, AX
+  xor CX, CX
+  in   AL, DX
+  jmp  ESC_TELA
+
+PORTA_CL:
+  mov  DX, lptC
+  and  AL, 0Fh    ; Zera bits mais sig.      
+  xor CX, CX
+  out  DX, AL
+  jmp  ESC_TELA
+
+PORTA_CH:
+  mov  DX, lptC
+  xor AX, AX    ; Zera AX
+  xor CX, CX
+  in   AL, DX
+  shr AL, 4
+  ;and  AL, 0F0h    ; Zera bits MENOS sig.     
+  jmp  ESC_TELA
+
+PORTA_D:
+  mov  DX, lptD    ; Programa modo de operação da porta
+  out  DX, AL
+  jmp  FINALIZAR_INTERRUPCAO
+  
+ESC_TELA:
+  call fATUALIZA_PORTAS
+
+FINALIZAR_INTERRUPCAO:
+  pop CX
+  pop DX
+  pop BX
+  iret
+endp

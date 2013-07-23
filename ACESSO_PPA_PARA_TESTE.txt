@@ -1,0 +1,69 @@
+;SUBSTITUIR ROTINA - SOMENTE TESTE - LUCAS
+;PORTA A - mANDA TIRO NORMAL
+;PORTA B - RECEBE SEMPRE TIRO 11h
+;PORTA C - PARTE BAIXA PARA ESCRITA - MANDA NORMAL
+;PORTA C - PARTE ALTA PARA LEITURA - LE: 70H = 0111 - GANHOU = NAO, AFUNDOU = SIM, ACERTOU = SIM, jOGOU = SIM
+;                                    LE: F0h = 1111 - GANHOU = SIM, AFUNDOU = SIM, ACERTOU = SIM, jOGOU = SIM
+;                                    LE: 50h = 0101 - GANHOU = NAO, AFUNDOU = SIM, ACERTOU = NAO, jOGOU = SIM
+;
+;
+ACESSO_PPA proc    ; Acessa PPA e escreve/ou/LE VALORES - passar PORTA A SER ACESSADA NA PARTE ALTA DE AX(AH) e valor em AL. 
+  ; 0A = porta A
+  ; 0B = porta B
+  ; 0C = porta C - Escrita 
+  ; 1C = porta C - Leitura
+  ; 0D = porta D   
+  sti
+  push BX
+  push DX
+  push CX
+
+  cmp  AH, 0Ah
+  jz   porta_a
+  cmp  AH, 0Bh
+  jz   porta_b
+  cmp  AH, 0Ch    ; Porta C parte alta
+  jz   porta_Cl
+  cmp  AH, 1Ch    ; Porta C parte baixa
+  jz   porta_Ch
+  cmp  AH, 0Dh
+  jz   porta_d
+  jmp  finalizar_interrupcao
+
+PORTA_A:
+  mov  DX, lptA
+  out  DX, AL
+  jmp  ESC_TELA
+
+PORTA_B:
+  mov  DX, lptB
+  xor AX, AX
+  mov AL, 33H ; TIRO FIXO  
+  jmp  ESC_TELA
+
+PORTA_CL:
+  mov  DX, lptC
+  and  AL, 0Fh    ; Zera bits mais sig.
+  jmp  ESC_TELA
+
+PORTA_CH:
+  mov  DX, lptC
+  xor AX, AX    ; Zera AX
+  xor CX, CX
+  mov AL, 07H ; LEITURA FIXA
+  jmp  ESC_TELA
+
+PORTA_D:
+  mov  DX, lptD    ; Programa modo de operação da porta
+  out  DX, AL
+  jmp  FINALIZAR_INTERRUPCAO
+  
+ESC_TELA:
+  call fATUALIZA_PORTAS
+
+FINALIZAR_INTERRUPCAO:
+  pop CX
+  pop DX
+  pop BX
+  iret
+endp
